@@ -3,6 +3,11 @@ default:
         progress:
             paths: false
     extensions:
+        AdamQuaile\Behat\CommandRunnerExtension:
+            afterSuite:
+            - rm -rf ./app/cache
+            - rm -rf ./app/logs
+            - rm ./app/sqlite.db.cache
         Behat\Symfony2Extension: ~
         BehatExtension\DoctrineDataFixturesExtension\Extension:
             lifetime: 'scenario'
