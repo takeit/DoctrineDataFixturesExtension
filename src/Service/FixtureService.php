@@ -26,6 +26,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\HttpKernel\Kernel;
+use Doctrine\Bundle\FixturesBundle\Loader\SymfonyFixturesLoader;
+use Symfony\Bridge\Doctrine\DataFixtures\ContainerAwareLoader;
 
 /**
  * Data Fixture Service.
@@ -93,13 +95,23 @@ class FixtureService
         $this->autoload = $autoload;
         $this->fixtures = $fixtures;
         $this->directories = $directories;
-        $this->loader = new Loader();
+        $this->loader = $this->getFixtureLoader();
+    }
+
+    private function getFixtureLoader(): Loader
+    {
+        $container = $this->kernel->getContainer();
+        $loader = class_exists(SymfonyFixturesLoader::class)
+            ? new SymfonyFixturesLoader($container)
+            : (class_exists(ContainerAwareLoader::class)
+                ? new ContainerAwareLoader($container)
+                : new Loader($container));
+
+        return $loader;
     }
 
     /**
      * @param BackupService $backupService
-     *
-     * @return void
      */
     public function enableBackupSupport(BackupService $backupService): void
     {
@@ -123,8 +135,6 @@ class FixtureService
 
     /**
      * Lazy init.
-     *
-     * @return void
      */
     private function init(): void
     {
@@ -186,8 +196,6 @@ class FixtureService
      * Fetch fixtures from directories.
      *
      * @param array $directoryNames
-     *
-     * @return void
      */
     private function fetchFixturesFromDirectories(array $directoryNames): void
     {
@@ -200,8 +208,6 @@ class FixtureService
      * Load a data fixture class.
      *
      * @param string $className Class name
-     *
-     * @return void
      */
     private function loadFixtureClass(string $className): void
     {
@@ -224,13 +230,11 @@ class FixtureService
      * Fetch fixtures from classes.
      *
      * @param array $classNames
-     *
-     * @return void
      */
     private function fetchFixturesFromClasses(array $classNames): void
     {
         foreach ($classNames as $className) {
-            if (substr($className, 0, 1) !== '\\') {
+            if ('\\' !== substr($className, 0, 1)) {
                 $className = '\\'.$className;
             }
 
@@ -242,14 +246,13 @@ class FixtureService
 
     /**
      * Fetch fixtures from Doctrine Fixtures Loader.
-     *
-     * @return void
      */
     private function fetchFixturesFromDoctrineLoader(): void
     {
         if (!$this->kernel->getContainer()->has('doctrine.fixtures.loader.alias')) {
             return;
         }
+
         $doctrineFixtureLoader = $this->kernel->getContainer()->get('doctrine.fixtures.loader.alias');
         foreach ($doctrineFixtureLoader->getFixtures() as $fixture) {
             if (!$this->loader->hasFixture($fixture)) {
@@ -270,6 +273,7 @@ class FixtureService
         $this->fetchFixturesFromDirectories($bundleDirectories);
         $this->fetchFixturesFromDirectories($this->directories);
         $this->fetchFixturesFromClasses($this->fixtures);
+
         $this->fetchFixturesFromDoctrineLoader();
 
         return $this->loader->getFixtures();
@@ -280,8 +284,6 @@ class FixtureService
      *
      * @param EntityManager $em    Entity manager
      * @param string        $event Event name
-     *
-     * @return void
      */
     private function dispatchEvent(EntityManager $em, string $event): void
     {
@@ -292,8 +294,6 @@ class FixtureService
 
     /**
      * Load fixtures into database.
-     *
-     * @return void
      */
     private function loadFixtures(): void
     {
@@ -320,8 +320,6 @@ class FixtureService
      * Create database using doctrine schema tool.
      *
      * @throws \Doctrine\ORM\Tools\ToolsException
-     *
-     * @return void
      */
     private function createDatabase(): void
     {
@@ -334,8 +332,6 @@ class FixtureService
 
     /**
      * Drop database using doctrine schema tool.
-     *
-     * @return void
      */
     private function dropDatabase(): void
     {
@@ -345,8 +341,6 @@ class FixtureService
 
     /**
      * Cache data fixtures.
-     *
-     * @return void
      */
     public function cacheFixtures(): void
     {
@@ -390,8 +384,6 @@ class FixtureService
      * Create a backup for the current fixtures.
      *
      * @throws \ReflectionException
-     *
-     * @return void
      */
     private function createBackup(): void
     {
@@ -408,8 +400,6 @@ class FixtureService
      * Restore a backup for the current fixtures.
      *
      * @throws \ReflectionException
-     *
-     * @return void
      */
     private function restoreBackup(): void
     {
@@ -426,8 +416,6 @@ class FixtureService
      * Reload data fixtures.
      *
      * @throws \ReflectionException
-     *
-     * @return void
      */
     public function reloadFixtures(): void
     {
@@ -455,8 +443,6 @@ class FixtureService
 
     /**
      * Flush entity manager.
-     *
-     * @return void
      */
     public function flush(): void
     {
