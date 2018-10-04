@@ -49,12 +49,15 @@ class FixtureContext implements KernelAwareContext
     }
 
     /**
-     * @Then I should see records
+     * @Then I should see 4 records
      */
-    public function iShouldSeeRecords()
+    public function iShouldSee4Records()
     {
         if (null === $this->lines || empty($this->lines)) {
             throw new \RuntimeException('There is no record.');
+        }
+        if (count($this->lines) !== 4) {
+            throw new \RuntimeException(sprintf('4 records expected. Found %d.', count($this->lines)));
         }
     }
 }
