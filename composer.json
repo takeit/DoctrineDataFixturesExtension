@@ -1,5 +1,5 @@
 {
-    "name": "behat-extension/doctrine-data-fixtures-extension",
+    "name": "takeit/doctrine-data-fixtures-extension",
     "type": "library",
     "description": "Doctrine data fixtures extension for Behat",
     "keywords": ["behat", "bdd", "doctrine", "data fixtures"],
